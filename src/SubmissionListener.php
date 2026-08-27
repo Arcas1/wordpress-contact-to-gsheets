@@ -29,14 +29,19 @@ final class SubmissionListener {
 				return;
 			}
 
-			$entryData  = (array) ( $payload['entry_data'] ?? [] );
-			$postedData = $entryData['posted_data'] ?? [];
+			$entryData = is_array( $payload['entry_data'] ?? null ) ? $payload['entry_data'] : [];
+
+			// Form Vibes 1.5.3 puts the submitted fields in 'entires' (its own
+			// misspelling). Fall back to other shapes for resilience.
+			$postedData = $payload['entires']
+				?? $payload['entries']
+				?? ( $entryData['posted_data'] ?? [] );
 			if ( ! is_array( $postedData ) || [] === $postedData ) {
 				return;
 			}
 
-			$pluginName = (string) ( $payload['plugin_name'] ?? '' );
-			$formId     = $payload['form_id'] ?? '';
+			$pluginName = (string) ( $payload['plugin_name'] ?? ( $entryData['form_plugin'] ?? '' ) );
+			$formId     = $payload['form_id'] ?? ( $entryData['form_id'] ?? '' );
 			$title      = (string) ( $entryData['title'] ?? '' );
 
 			$row = $this->mapper->toRow(
@@ -48,6 +53,7 @@ final class SubmissionListener {
 			);
 
 			$this->appendWithRetry( $row );
+			delete_transient( 'c2gs_not_connected' );
 		} catch ( \Throwable $e ) {
 			$this->log->add( [
 				'form_id'     => $payload['form_id'] ?? null,

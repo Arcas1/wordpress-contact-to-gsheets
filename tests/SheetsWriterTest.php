@@ -24,7 +24,7 @@ final class SheetsWriterTest extends TestCase {
 		$spreadsheet->shouldReceive( 'getSheets' )->andReturn( [ $sheet ] );
 
 		$sheetsResource = Mockery::mock( SpreadsheetsResource::class );
-		$sheetsResource->shouldReceive( 'get' )->with( 'SS_ID' )->andReturn( $spreadsheet );
+		$sheetsResource->shouldReceive( 'get' )->with( 'SS_ID', Mockery::type( 'array' ) )->andReturn( $spreadsheet );
 
 		$sheets = Mockery::mock( Sheets::class );
 		$sheets->spreadsheets        = $sheetsResource;
@@ -36,7 +36,7 @@ final class SheetsWriterTest extends TestCase {
 		Functions\expect( 'get_transient' )->once()->with( SheetsWriter::READY_TRANSIENT )->andReturn( 1 );
 		Functions\expect( 'set_transient' )->never();
 
-		$sheets = Mockery::mock( Sheets::class );
+		$sheets                      = Mockery::mock( Sheets::class );
 		$sheets->spreadsheets        = Mockery::mock( SpreadsheetsResource::class );
 		$sheets->spreadsheets_values = Mockery::mock( ValuesResource::class );
 
@@ -44,10 +44,10 @@ final class SheetsWriterTest extends TestCase {
 		$sheets->spreadsheets_values->shouldReceive( 'append' )->once()->withArgs(
 			function ( $id, $range, $body, $opts ) {
 				return 'SS_ID' === $id
-					&& 'Submissions!A:F' === $range
+					&& "'Submissions'!A:F" === $range
 					&& $body instanceof ValueRange
 					&& [ [ 'r1', 'r2', 'r3', 'r4', 'r5', 'r6' ] ] === $body->getValues()
-					&& 'USER_ENTERED' === $opts['valueInputOption']
+					&& 'RAW' === $opts['valueInputOption']
 					&& 'INSERT_ROWS' === $opts['insertDataOption'];
 			}
 		);
@@ -72,11 +72,11 @@ final class SheetsWriterTest extends TestCase {
 		$emptyHeader = Mockery::mock( ValueRange::class );
 		$emptyHeader->shouldReceive( 'getValues' )->andReturn( null );
 		$sheets->spreadsheets_values->shouldReceive( 'get' )->once()
-			->with( 'SS_ID', 'Submissions!A1:F1' )->andReturn( $emptyHeader );
+			->with( 'SS_ID', "'Submissions'!A1:F1" )->andReturn( $emptyHeader );
 
 		$sheets->spreadsheets_values->shouldReceive( 'update' )->once()->withArgs(
 			function ( $id, $range, $body, $opts ) {
-				return 'Submissions!A1:F1' === $range
+				return "'Submissions'!A1:F1" === $range
 					&& SheetsWriter::HEADER === $body->getValues()[0]
 					&& 'RAW' === $opts['valueInputOption'];
 			}
@@ -102,6 +102,22 @@ final class SheetsWriterTest extends TestCase {
 		$sheets->spreadsheets_values->shouldReceive( 'append' )->once();
 
 		( new SheetsWriter( $sheets, 'SS_ID', 'Submissions' ) )
+			->append( [ 'a', 'b', 'c', 'd', 'e', 'f' ] );
+	}
+
+	public function test_quotes_tab_name_with_spaces_in_ranges(): void {
+		Functions\expect( 'get_transient' )->once()->andReturn( 1 );
+
+		$sheets                      = Mockery::mock( Sheets::class );
+		$sheets->spreadsheets        = Mockery::mock( SpreadsheetsResource::class );
+		$sheets->spreadsheets_values = Mockery::mock( ValuesResource::class );
+		$sheets->spreadsheets_values->shouldReceive( 'append' )->once()->withArgs(
+			function ( $id, $range ) {
+				return "'Form Submissions'!A:F" === $range;
+			}
+		);
+
+		( new SheetsWriter( $sheets, 'SS_ID', 'Form Submissions' ) )
 			->append( [ 'a', 'b', 'c', 'd', 'e', 'f' ] );
 	}
 }

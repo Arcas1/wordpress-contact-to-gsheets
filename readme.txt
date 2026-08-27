@@ -42,6 +42,13 @@ revokes the token) before decommissioning the site.
   and the full submission remains in Form Vibes.
 * Existing Form Vibes entries are not backfilled.
 * Field mapping is automatic; there is no per-form override.
+* The "form" column is "<plugin> #<id>" (e.g. "cf7 #42"). Form Vibes 1.5.3 does
+  not pass a form title to the hook this plugin listens on.
+* Cell values are written as RAW text, so a submission starting with "=" is
+  stored literally, never executed as a spreadsheet formula.
+* This plugin bundles the Google API PHP client (and Guzzle) unprefixed. On a
+  site where another plugin loads a conflicting Guzzle version, load order can
+  cause PHP errors. Form Vibes ships its own prefixed copy and is unaffected.
 
 == Manual test checklist (maintainers) ==
 
