@@ -170,6 +170,18 @@ final class Settings {
 
 			<h2><?php esc_html_e( 'Google connection', 'contact-to-gsheets' ); ?></h2>
 			<p>
+				<?php
+				printf(
+					/* translators: %s: URL of the setup guide */
+					wp_kses(
+						__( 'First time? Follow the <a href="%s" target="_blank" rel="noopener">step-by-step Google setup guide</a> to create the OAuth client and get the Client ID and Client Secret.', 'contact-to-gsheets' ),
+						[ 'a' => [ 'href' => [], 'target' => [], 'rel' => [] ] ]
+					),
+					'https://github.com/Arcas1/wordpress-contact-to-gsheets/blob/master/docs/GOOGLE_SETUP.md'
+				);
+				?>
+			</p>
+			<p>
 				<?php esc_html_e( 'Add this exact redirect URI to your Google Cloud OAuth client (type: Web application):', 'contact-to-gsheets' ); ?><br />
 				<code><?php echo esc_html( $this->redirectUri() ); ?></code>
 			</p>

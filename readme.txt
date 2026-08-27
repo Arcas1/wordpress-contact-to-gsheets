@@ -19,13 +19,23 @@ row are created automatically on the first submission.
 
 == Setup ==
 
-1. In Google Cloud, create an OAuth 2.0 Client ID of type "Web application".
-2. Add this redirect URI to that client (shown on the settings page):
+Full step-by-step Google walkthrough (with screenshots of each console page
+and a troubleshooting table): docs/GOOGLE_SETUP.md
+https://github.com/Arcas1/wordpress-contact-to-gsheets/blob/master/docs/GOOGLE_SETUP.md
+
+Short version:
+
+1. Google Cloud: create a project, enable the Google Sheets API.
+2. Configure the OAuth consent screen (scope: .../auth/spreadsheets). If the
+   account is @gmail.com, add it as a Test user AND publish the app, or the
+   refresh token expires after 7 days.
+3. Create credentials -> OAuth client ID -> Web application. Add this redirect
+   URI (also shown on the settings page):
    https://YOUR-SITE/wp-admin/admin-post.php?action=c2gs_oauth_cb
-3. In WordPress: Settings -> Contact to GSheets. Paste the Client ID and Client
-   Secret, the Spreadsheet ID (from the sheet URL), and a tab name.
-4. Click "Connect Google" and grant access to Google Sheets.
-5. Submit a test form and confirm the row appears.
+4. In WordPress: Settings -> Contact to GSheets. Paste the Client ID, Client
+   Secret, and Spreadsheet ID (from the sheet URL). Save.
+5. Click "Connect Google" and grant access.
+6. Submit a test form and confirm the row appears.
 
 == Security note ==
 
