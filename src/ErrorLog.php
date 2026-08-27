@@ -5,7 +5,7 @@ namespace C2GS;
 /**
  * Newest-first ring buffer of sync failures, stored in one option.
  */
-final class ErrorLog {
+class ErrorLog {
 
 	public const OPTION = 'c2gs_error_log';
 	public const MAX    = 50;

@@ -11,7 +11,7 @@ use Google\Service\Sheets\ValueRange;
  * Appends a single row to a Google Sheet tab, creating the tab and
  * header row on first use.
  */
-final class SheetsWriter {
+class SheetsWriter {
 
 	public const HEADER          = [ 'timestamp', 'form', 'name', 'email', 'message', 'data' ];
 	public const READY_TRANSIENT = 'c2gs_tab_ready';
