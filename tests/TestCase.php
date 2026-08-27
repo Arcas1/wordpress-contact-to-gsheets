@@ -14,6 +14,18 @@ abstract class TestCase extends BaseTestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		Monkey\setUp();
+		Monkey\Functions\stubs(
+			[
+				'__'          => null,
+				'_n'          => null,
+				'esc_html__'  => null,
+				'esc_attr__'  => null,
+				'esc_html'    => null,
+				'esc_attr'    => null,
+				'esc_url'     => null,
+				'wp_unslash'  => null,
+			]
+		);
 	}
 
 	protected function tearDown(): void {
