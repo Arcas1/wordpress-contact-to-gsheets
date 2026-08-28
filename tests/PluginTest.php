@@ -22,6 +22,8 @@ final class PluginTest extends TestCase {
 		Plugin::instance()->boot();
 
 		$this->assertContains( 'fv_after_entry_meta_success', $hooks );
+		$this->assertContains( 'metform_after_store_form_data', $hooks );
+		$this->assertContains( 'fluentform/submission_inserted', $hooks );
 	}
 
 	public function test_instance_is_singleton(): void {

@@ -36,14 +36,20 @@ final class Plugin {
 
 		( new Settings( $auth, $log ) )->register();
 
-		$listener = new SubmissionListener(
+		$sync = new SubmissionSync(
 			$mapper,
 			$log,
 			$auth,
 			$this->buildWriterFactory( $auth )
 		);
 
-		add_action( 'fv_after_entry_meta_success', [ $listener, 'handle' ] );
+		// Form Vibes covers CF7, WPForms, Elementor, Gravity, Ninja, WS Form,
+		// Caldera, Bricks, Beaver Builder, Everest Forms through one hook.
+		add_action( 'fv_after_entry_meta_success', [ new SubmissionListener( $sync ), 'handle' ] );
+
+		// Direct adapters for popular forms Form Vibes 1.5.3 does not integrate.
+		add_action( 'metform_after_store_form_data', [ new MetFormListener( $sync ), 'handle' ], 10, 4 );
+		add_action( 'fluentform/submission_inserted', [ new FluentFormListener( $sync ), 'handle' ], 20, 3 );
 	}
 
 	public function buildWriterFactory( GoogleAuth $auth ): \Closure {

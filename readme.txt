@@ -3,19 +3,29 @@ Requires at least: 6.0
 Requires PHP: 8.1
 License: GPLv2 or later
 
-Sends Form Vibes form submissions to a Google Sheet in real time, one row per submission.
+Sends WordPress form submissions to a Google Sheet in real time, one row per submission.
 
 == Description ==
 
-On every successful Form Vibes entry (Contact Form 7, WPForms, Elementor Forms,
-Gravity Forms, and other Form Vibes integrations), this plugin appends one row to
-a Google Sheet tab you configure:
+On every form submission this plugin appends one row to a Google Sheet tab you
+configure:
 
 timestamp | form | name | email | message | data
 
 The name, email, and message columns are auto-detected from the submitted fields.
 The data column holds the complete submission as JSON. A missing tab and header
 row are created automatically on the first submission.
+
+= Supported forms =
+
+Through Form Vibes (install and activate Form Vibes 1.5.3+; it captures these):
+Contact Form 7, WPForms, Elementor Forms, Gravity Forms, Ninja Forms, WS Form,
+Everest Forms, Caldera Forms, Bricks, Beaver Builder.
+
+Directly, no Form Vibes needed:
+MetForm, Fluent Forms.
+
+Not yet supported: Forminator, Formidable Forms, Jetpack / block contact form.
 
 == Setup ==
 
