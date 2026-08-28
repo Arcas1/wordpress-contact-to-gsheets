@@ -50,6 +50,9 @@ final class Plugin {
 		// Direct adapters for popular forms Form Vibes 1.5.3 does not integrate.
 		add_action( 'metform_after_store_form_data', [ new MetFormListener( $sync ), 'handle' ], 10, 4 );
 		add_action( 'fluentform/submission_inserted', [ new FluentFormListener( $sync ), 'handle' ], 20, 3 );
+		add_action( 'forminator_custom_form_submit_before_set_fields', [ new ForminatorListener( $sync ), 'handle' ], 20, 3 );
+		add_action( 'frm_after_create_entry', [ new FormidableListener( $sync ), 'handle' ], 20, 3 );
+		add_action( 'grunion_after_feedback_post_inserted', [ new JetpackListener( $sync ), 'handle' ], 20, 4 );
 	}
 
 	public function buildWriterFactory( GoogleAuth $auth ): \Closure {

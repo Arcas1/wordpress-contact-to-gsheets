@@ -24,7 +24,7 @@ class SubmissionSync {
 	 * @param string              $title  Form title; empty falls back to "<source> #<id>".
 	 * @param array<string,mixed> $fields field name => value (string or array).
 	 */
-	public function sync( string $source, string|int $formId, string $title, array $fields ): void {
+	public function sync( string $source, string|int $formId, string $title, array $fields, ?string $emailKeyHint = null ): void {
 		try {
 			$settings      = get_option( 'c2gs_settings', [] );
 			$spreadsheetId = is_array( $settings ) ? (string) ( $settings['spreadsheet_id'] ?? '' ) : '';
@@ -36,7 +36,7 @@ class SubmissionSync {
 				return;
 			}
 
-			$row = $this->mapper->toRow( $source, $formId, $title, $fields, wp_date( 'c' ) );
+			$row = $this->mapper->toRow( $source, $formId, $title, $fields, wp_date( 'c' ), $emailKeyHint );
 			$this->appendWithRetry( $row );
 			delete_transient( 'c2gs_not_connected' );
 		} catch ( \Throwable $e ) {

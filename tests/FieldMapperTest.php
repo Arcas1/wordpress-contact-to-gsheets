@@ -76,6 +76,18 @@ final class FieldMapperTest extends TestCase {
 		$this->assertSame( '', $row[4] ); // message (no non-email fields remain)
 	}
 
+	public function test_email_key_hint_wins_over_auto_detection(): void {
+		$posted = [
+			'q_contacto' => 'ada at example dot com', // not a valid email string
+			'q_nombre'   => 'Ada',
+			'q_consulta' => 'This is the longest answer in the form by far.',
+		];
+		$row = $this->mapper()->toRow( 'formidable', 1, 'X', $posted, 'T', 'q_contacto' );
+		$this->assertSame( 'ada at example dot com', $row[3] ); // email column from the hint
+		$this->assertSame( 'Ada', $row[2] );
+		$this->assertSame( 'This is the longest answer in the form by far.', $row[4] );
+	}
+
 	public function test_message_is_longest_remaining_value(): void {
 		$posted = [
 			'name'  => 'Jo',

@@ -24,6 +24,9 @@ final class PluginTest extends TestCase {
 		$this->assertContains( 'fv_after_entry_meta_success', $hooks );
 		$this->assertContains( 'metform_after_store_form_data', $hooks );
 		$this->assertContains( 'fluentform/submission_inserted', $hooks );
+		$this->assertContains( 'forminator_custom_form_submit_before_set_fields', $hooks );
+		$this->assertContains( 'frm_after_create_entry', $hooks );
+		$this->assertContains( 'grunion_after_feedback_post_inserted', $hooks );
 	}
 
 	public function test_instance_is_singleton(): void {

@@ -23,9 +23,7 @@ Contact Form 7, WPForms, Elementor Forms, Gravity Forms, Ninja Forms, WS Form,
 Everest Forms, Caldera Forms, Bricks, Beaver Builder.
 
 Directly, no Form Vibes needed:
-MetForm, Fluent Forms.
-
-Not yet supported: Forminator, Formidable Forms, Jetpack / block contact form.
+MetForm, Fluent Forms, Forminator, Formidable Forms, Jetpack / block contact form.
 
 == Setup ==
 

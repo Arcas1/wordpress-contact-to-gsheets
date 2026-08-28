@@ -23,10 +23,10 @@ final class FieldMapper {
 	 * @param array<string,mixed> $postedData Field name => value (string or array).
 	 * @return array{0:string,1:string,2:string,3:string,4:string,5:string}
 	 */
-	public function toRow( string $pluginName, string|int $formId, string $title, array $postedData, string $timestamp ): array {
+	public function toRow( string $pluginName, string|int $formId, string $title, array $postedData, string $timestamp, ?string $emailKeyHint = null ): array {
 		$clean = $this->clean( $postedData );
 
-		[ $emailKey, $email ] = $this->pickEmail( $clean );
+		[ $emailKey, $email ] = $this->pickEmail( $clean, $emailKeyHint );
 		[ $nameKey, $name ]   = $this->pickName( $clean, $emailKey, $email );
 		$message              = $this->pickMessage( $clean, $emailKey, $nameKey );
 
@@ -69,7 +69,10 @@ final class FieldMapper {
 	 * @param array<string,string> $clean
 	 * @return array{0:?string,1:string}
 	 */
-	private function pickEmail( array $clean ): array {
+	private function pickEmail( array $clean, ?string $hint = null ): array {
+		if ( null !== $hint && '' !== $hint && array_key_exists( $hint, $clean ) && '' !== $clean[ $hint ] ) {
+			return [ $hint, $clean[ $hint ] ];
+		}
 		foreach ( $clean as $key => $value ) {
 			if ( ( $this->isEmail )( $value ) ) {
 				return [ $key, $value ];
