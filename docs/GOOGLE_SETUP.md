@@ -1,5 +1,9 @@
 # Google setup guide
 
+> The same walkthrough is built into the plugin, in English and Spanish:
+> **Settings -> Contact to GSheets -> Setup guide** tab. This file is the
+> repository copy for reference.
+
 This plugin talks to Google Sheets using **OAuth 2.0 user consent** (not a
 plain API key). You create an OAuth client in Google Cloud, paste its Client
 ID and Client secret into the plugin, then click "Connect Google" once. The

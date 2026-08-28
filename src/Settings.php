@@ -161,23 +161,62 @@ final class Settings {
 
 	public function renderPage(): void {
 		$this->assertCap();
+		$tab = ( isset( $_GET['tab'] ) && 'guide' === sanitize_key( wp_unslash( $_GET['tab'] ) ) ) ? 'guide' : 'settings';
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Contact to GSheets', 'contact-to-gsheets' ); ?></h1>
+			<?php $this->renderTabs( $tab ); ?>
+			<?php
+			if ( 'guide' === $tab ) {
+				( new SetupGuide() )->render(
+					$this->redirectUri(),
+					$this->tabUrl( 'settings' ),
+					$this->tabUrl( 'guide' )
+				);
+			} else {
+				$this->renderSettingsTab();
+			}
+			?>
+		</div>
+		<?php
+	}
+
+	private function renderTabs( string $active ): void {
+		$tabs = [
+			'settings' => __( 'Settings', 'contact-to-gsheets' ),
+			'guide'    => __( 'Setup guide', 'contact-to-gsheets' ),
+		];
+		echo '<h2 class="nav-tab-wrapper">';
+		foreach ( $tabs as $key => $label ) {
+			printf(
+				'<a href="%s" class="nav-tab%s">%s</a>',
+				esc_url( $this->tabUrl( $key ) ),
+				$active === $key ? ' nav-tab-active' : '',
+				esc_html( $label )
+			);
+		}
+		echo '</h2>';
+	}
+
+	private function tabUrl( string $tab ): string {
+		return admin_url( 'options-general.php?page=' . self::PAGE_SLUG . '&tab=' . $tab );
+	}
+
+	private function renderSettingsTab(): void {
 		$settings  = get_option( self::SETTINGS_OPTION, [] );
 		$settings  = is_array( $settings ) ? $settings : [];
 		$connected = $this->auth->isConnected();
 		?>
-		<div class="wrap">
-			<h1><?php esc_html_e( 'Contact to GSheets', 'contact-to-gsheets' ); ?></h1>
-
 			<h2><?php esc_html_e( 'Google connection', 'contact-to-gsheets' ); ?></h2>
 			<p>
 				<?php
 				printf(
-					/* translators: %s: URL of the setup guide */
+					/* translators: %s: URL of the in-plugin setup guide tab */
 					wp_kses(
-						__( 'First time? Follow the <a href="%s" target="_blank" rel="noopener">step-by-step Google setup guide</a> to create the OAuth client and get the Client ID and Client Secret.', 'contact-to-gsheets' ),
-						[ 'a' => [ 'href' => [], 'target' => [], 'rel' => [] ] ]
+						__( 'First time? Follow the <a href="%s">step-by-step setup guide</a> to create the OAuth client and get the Client ID and Client Secret.', 'contact-to-gsheets' ),
+						[ 'a' => [ 'href' => [] ] ]
 					),
-					'https://github.com/Arcas1/wordpress-contact-to-gsheets/blob/master/docs/GOOGLE_SETUP.md'
+					esc_url( $this->tabUrl( 'guide' ) )
 				);
 				?>
 			</p>
@@ -256,7 +295,6 @@ final class Settings {
 					</tbody>
 				</table>
 			<?php endif; ?>
-		</div>
 		<?php
 	}
 

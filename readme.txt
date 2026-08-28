@@ -19,8 +19,9 @@ row are created automatically on the first submission.
 
 == Setup ==
 
-Full step-by-step Google walkthrough (with screenshots of each console page
-and a troubleshooting table): docs/GOOGLE_SETUP.md
+A full step-by-step walkthrough is built into the plugin, in English and
+Spanish: Settings -> Contact to GSheets -> "Setup guide" tab. The same text
+is in docs/GOOGLE_SETUP.md:
 https://github.com/Arcas1/wordpress-contact-to-gsheets/blob/master/docs/GOOGLE_SETUP.md
 
 Short version:
