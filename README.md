@@ -43,10 +43,10 @@ Full walkthrough: [`docs/GOOGLE_SETUP.md`](docs/GOOGLE_SETUP.md).
 
 Each form source has a small adapter that hooks that plugin's submission action
 and normalizes the fields. Every adapter feeds one shared pipeline
-(`SubmissionSync`): map to the fixed row, append to the sheet via the Google
-Sheets API (`google/apiclient`), retry once on a 401, and log failures to a
-capped option surfaced as an admin notice. A failure never blocks the visitor's
-submission.
+(`SubmissionSync`): map to the fixed row, append to the sheet via direct HTTPS
+calls to the Google Sheets REST API (`wp_remote_*`, no bundled SDK), retry once
+on a 401, and log failures to a capped option surfaced as an admin notice. A
+failure never blocks the visitor's submission.
 
 Delivery is real-time only: no cron, no retry queue. A submission that cannot
 reach Google is logged, not re-sent; the full data stays in the source form

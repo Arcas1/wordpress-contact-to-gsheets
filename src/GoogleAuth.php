@@ -2,11 +2,10 @@
 
 namespace C2GS;
 
-use Google\Client;
-
 /**
- * Wraps a Google OAuth 2.0 client for the Sheets scope and persists the
- * token set (with offline refresh token) in a single option.
+ * Google OAuth 2.0 (user consent, offline refresh token) for the Sheets
+ * scope, talking straight to the Google endpoints over the WordPress HTTP
+ * API. The token set lives in one option, autoload off.
  */
 class GoogleAuth {
 
@@ -14,32 +13,51 @@ class GoogleAuth {
 	public const CALLBACK_ACTION = 'c2gs_oauth_cb';
 	public const SCOPE           = 'https://www.googleapis.com/auth/spreadsheets';
 
+	private const AUTH_ENDPOINT   = 'https://accounts.google.com/o/oauth2/v2/auth';
+	private const TOKEN_ENDPOINT  = 'https://oauth2.googleapis.com/token';
+	private const REVOKE_ENDPOINT = 'https://oauth2.googleapis.com/revoke';
+	private const EXPIRY_SKEW     = 60;
+
 	public function __construct(
 		private string $clientId,
 		private string $clientSecret,
 		private string $redirectUri
 	) {}
 
-	protected function newClient(): Client {
-		$client = new Client();
-		$client->setClientId( $this->clientId );
-		$client->setClientSecret( $this->clientSecret );
-		$client->setRedirectUri( $this->redirectUri );
-		$client->setScopes( [ self::SCOPE ] );
-		$client->setAccessType( 'offline' );
-		$client->setPrompt( 'consent' );
-		return $client;
-	}
-
 	public function consentUrl( string $state ): string {
-		$client = $this->newClient();
-		$client->setState( $state );
-		return $client->createAuthUrl();
+		return self::AUTH_ENDPOINT . '?' . http_build_query(
+			[
+				'client_id'     => $this->clientId,
+				'redirect_uri'  => $this->redirectUri,
+				'response_type' => 'code',
+				'scope'         => self::SCOPE,
+				'access_type'   => 'offline',
+				'prompt'        => 'consent',
+				'state'         => $state,
+			],
+			'',
+			'&',
+			PHP_QUERY_RFC3986
+		);
 	}
 
+	/** @return bool True when the code was exchanged and a token stored. */
 	public function exchangeCode( string $code ): bool {
-		$token = $this->newClient()->fetchAccessTokenWithAuthCode( $code );
-		if ( isset( $token['error'] ) ) {
+		try {
+			$token = Http::postForm(
+				self::TOKEN_ENDPOINT,
+				[
+					'code'          => $code,
+					'client_id'     => $this->clientId,
+					'client_secret' => $this->clientSecret,
+					'redirect_uri'  => $this->redirectUri,
+					'grant_type'    => 'authorization_code',
+				]
+			);
+		} catch ( ApiException $e ) {
+			return false;
+		}
+		if ( empty( $token['access_token'] ) ) {
 			return false;
 		}
 		$this->storeToken( $token );
@@ -52,66 +70,77 @@ class GoogleAuth {
 			&& ( ! empty( $token['refresh_token'] ) || ! empty( $token['access_token'] ) );
 	}
 
-	public function authedClient(): Client {
+	/**
+	 * A valid access token, refreshing first when the stored one is expired.
+	 *
+	 * @throws ApiException When not connected or the refresh fails.
+	 */
+	public function accessToken(): string {
 		$token = get_option( self::TOKEN_OPTION, [] );
-		if ( empty( $token ) || ! is_array( $token ) ) {
-			throw new \RuntimeException( 'Google account not connected' );
+		if ( empty( $token ) || ! is_array( $token ) || empty( $token['access_token'] ) ) {
+			throw new ApiException( 'Google account not connected', 0 );
 		}
-
-		$client = $this->newClient();
-		$client->setAccessToken( $token );
-
-		if ( $client->isAccessTokenExpired() ) {
-			$refreshToken = $token['refresh_token'] ?? null;
-			if ( ! $refreshToken ) {
-				throw new \RuntimeException( 'No refresh token stored; reconnect required' );
-			}
-			$new = $client->fetchAccessTokenWithRefreshToken( $refreshToken );
-			if ( isset( $new['error'] ) ) {
-				throw new \RuntimeException( 'Token refresh failed: ' . $new['error'] );
-			}
-			$merged = array_merge( $token, $client->getAccessToken() );
-			if ( empty( $merged['refresh_token'] ) ) {
-				$merged['refresh_token'] = $refreshToken;
-			}
-			$this->storeToken( $merged );
+		if ( time() >= (int) ( $token['expires_at'] ?? 0 ) ) {
+			return $this->refresh( $token );
 		}
-
-		return $client;
+		return (string) $token['access_token'];
 	}
 
+	/**
+	 * Refresh unconditionally (used after a 401 on a token that looked valid).
+	 *
+	 * @throws ApiException
+	 */
 	public function forceRefresh(): void {
-		$token        = get_option( self::TOKEN_OPTION, [] );
-		$refreshToken = is_array( $token ) ? ( $token['refresh_token'] ?? null ) : null;
-		if ( ! $refreshToken ) {
-			throw new \RuntimeException( 'No refresh token stored; reconnect required' );
-		}
-		$new = $this->newClient()->fetchAccessTokenWithRefreshToken( $refreshToken );
-		if ( isset( $new['error'] ) ) {
-			throw new \RuntimeException( 'Token refresh failed: ' . $new['error'] );
-		}
-		$merged                  = array_merge( is_array( $token ) ? $token : [], $new );
-		$merged['refresh_token'] = $merged['refresh_token'] ?? $refreshToken;
-		$this->storeToken( $merged );
+		$token = get_option( self::TOKEN_OPTION, [] );
+		$this->refresh( is_array( $token ) ? $token : [] );
 	}
 
 	public function disconnect(): void {
 		$token = get_option( self::TOKEN_OPTION, [] );
-		if ( is_array( $token ) && ! empty( $token['access_token'] ) ) {
+		$revoke = is_array( $token ) ? ( $token['refresh_token'] ?? $token['access_token'] ?? '' ) : '';
+		if ( '' !== $revoke ) {
 			try {
-				$this->newClient()->revokeToken( $token );
-			} catch ( \Throwable $e ) {
+				Http::postForm( self::REVOKE_ENDPOINT, [ 'token' => (string) $revoke ] );
+			} catch ( ApiException $e ) {
 				// Best effort; still clear locally.
 			}
 		}
 		delete_option( self::TOKEN_OPTION );
 	}
 
+	/**
+	 * @param array<string,mixed> $current
+	 * @throws ApiException
+	 */
+	private function refresh( array $current ): string {
+		$refreshToken = $current['refresh_token'] ?? '';
+		if ( '' === $refreshToken ) {
+			throw new ApiException( 'No refresh token stored; reconnect required', 0 );
+		}
+		$new = Http::postForm(
+			self::TOKEN_ENDPOINT,
+			[
+				'client_id'     => $this->clientId,
+				'client_secret' => $this->clientSecret,
+				'refresh_token' => (string) $refreshToken,
+				'grant_type'    => 'refresh_token',
+			]
+		);
+		if ( empty( $new['access_token'] ) ) {
+			throw new ApiException( 'Token refresh returned no access_token', 0 );
+		}
+		// Google omits refresh_token on refresh; keep the existing one.
+		$new['refresh_token'] = $new['refresh_token'] ?? $refreshToken;
+		$this->storeToken( array_merge( $current, $new ) );
+		return (string) $new['access_token'];
+	}
+
 	/** @param array<string,mixed> $token */
 	private function storeToken( array $token ): void {
-		if ( ! isset( $token['created'] ) ) {
-			$token['created'] = time();
-		}
+		$expiresIn            = (int) ( $token['expires_in'] ?? 3600 );
+		$token['expires_at']  = time() + max( 0, $expiresIn - self::EXPIRY_SKEW );
+		unset( $token['expires_in'] );
 		update_option( self::TOKEN_OPTION, $token, false );
 	}
 }

@@ -106,10 +106,12 @@ final class Settings {
 	 * @return array{client_id?:string,client_secret?:string,error?:string}
 	 */
 	protected function readClientJsonUpload(): array {
-		if ( empty( $_FILES['c2gs_client_json']['tmp_name'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		// This runs inside the register_setting() sanitize callback, which WordPress
+		// invokes only after options.php has verified its own nonce.
+		if ( empty( $_FILES['c2gs_client_json']['tmp_name'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- options.php verified the nonce before this callback.
 			return [];
 		}
-		$file = $_FILES['c2gs_client_json']; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$file = $_FILES['c2gs_client_json']; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- options.php verified the nonce before this callback.
 
 		if ( (int) ( $file['error'] ?? UPLOAD_ERR_NO_FILE ) !== UPLOAD_ERR_OK ) {
 			return [ 'error' => __( 'The credentials file upload failed. Try again.', 'contact-to-gsheets' ) ];
@@ -154,8 +156,10 @@ final class Settings {
 
 	public function handleOauthStart(): void {
 		$this->assertCap();
+		check_admin_referer( 'c2gs_oauth_start' );
 		$state = wp_create_nonce( self::STATE_NONCE );
-		wp_redirect( $this->auth->consentUrl( $state ) );
+		// External redirect to the Google consent screen.
+		wp_redirect( $this->auth->consentUrl( $state ) ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- external OAuth endpoint.
 		exit;
 	}
 
@@ -303,7 +307,7 @@ final class Settings {
 					</form>
 				<?php else : ?>
 					<strong style="color:#b32d2e;"><?php esc_html_e( 'Not connected', 'contact-to-gsheets' ); ?></strong>
-					<a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin-post.php?action=c2gs_oauth_start' ) ); ?>">
+					<a class="button button-primary" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=c2gs_oauth_start' ), 'c2gs_oauth_start' ) ); ?>">
 						<?php esc_html_e( 'Connect Google', 'contact-to-gsheets' ); ?>
 					</a>
 				<?php endif; ?>

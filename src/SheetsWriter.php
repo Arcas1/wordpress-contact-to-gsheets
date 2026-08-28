@@ -2,46 +2,36 @@
 
 namespace C2GS;
 
-use Google\Service\Exception as GoogleServiceException;
-use Google\Service\Sheets;
-use Google\Service\Sheets\BatchUpdateSpreadsheetRequest;
-use Google\Service\Sheets\Request as SheetsRequest;
-use Google\Service\Sheets\ValueRange;
-
 /**
- * Appends a single row to a Google Sheet tab, creating the tab and
- * header row on first use.
+ * Appends a single row to a Google Sheet tab over the Sheets REST API v4,
+ * creating the tab and header row on first use. Values are written RAW so a
+ * submission starting with "=" is never evaluated as a formula.
  */
 class SheetsWriter {
 
 	public const HEADER          = [ 'timestamp', 'form', 'name', 'email', 'message', 'data' ];
 	public const READY_TRANSIENT = 'c2gs_tab_ready';
 	private const READY_TTL      = 600;
+	private const BASE           = 'https://sheets.googleapis.com/v4/spreadsheets/';
 
 	public function __construct(
-		private Sheets $sheets,
+		private GoogleAuth $auth,
 		private string $spreadsheetId,
 		private string $tabName
 	) {}
 
 	/**
 	 * @param array{0:string,1:string,2:string,3:string,4:string,5:string} $row
+	 * @throws ApiException
 	 */
 	public function append( array $row ): void {
 		$this->ensureReady();
 
-		$body = new ValueRange( [ 'values' => [ array_values( $row ) ] ] );
-		$this->sheets->spreadsheets_values->append(
-			$this->spreadsheetId,
-			$this->range( 'A:F' ),
-			$body,
-			[
-				// RAW, not USER_ENTERED: submitted text must never be parsed as
-				// a formula (a value starting with =, +, -, @ would otherwise
-				// become a live formula or an error cell).
-				'valueInputOption' => 'RAW',
-				'insertDataOption' => 'INSERT_ROWS',
-			]
+		Http::json(
+			'POST',
+			$this->valuesUrl( 'A:F', ':append', [ 'valueInputOption' => 'RAW', 'insertDataOption' => 'INSERT_ROWS' ] ),
+			$this->auth->accessToken(),
+			[ 'values' => [ array_values( $row ) ] ]
 		);
 	}
 
@@ -55,25 +45,23 @@ class SheetsWriter {
 	}
 
 	private function ensureTab(): void {
-		$spreadsheet = $this->sheets->spreadsheets->get(
-			$this->spreadsheetId,
-			[ 'fields' => 'sheets.properties.title' ]
-		);
-		foreach ( $spreadsheet->getSheets() as $sheet ) {
-			if ( $sheet->getProperties()->getTitle() === $this->tabName ) {
+		$token = $this->auth->accessToken();
+		$meta  = Http::json( 'GET', self::BASE . rawurlencode( $this->spreadsheetId ) . '?fields=sheets.properties.title', $token );
+
+		foreach ( $meta['sheets'] ?? [] as $sheet ) {
+			if ( ( $sheet['properties']['title'] ?? null ) === $this->tabName ) {
 				return;
 			}
 		}
 
-		$request = new SheetsRequest( [
-			'addSheet' => [ 'properties' => [ 'title' => $this->tabName ] ],
-		] );
 		try {
-			$this->sheets->spreadsheets->batchUpdate(
-				$this->spreadsheetId,
-				new BatchUpdateSpreadsheetRequest( [ 'requests' => [ $request ] ] )
+			Http::json(
+				'POST',
+				self::BASE . rawurlencode( $this->spreadsheetId ) . ':batchUpdate',
+				$token,
+				[ 'requests' => [ [ 'addSheet' => [ 'properties' => [ 'title' => $this->tabName ] ] ] ] ]
 			);
-		} catch ( GoogleServiceException $e ) {
+		} catch ( ApiException $e ) {
 			// A concurrent submission may have created the tab first.
 			if ( false === stripos( $e->getMessage(), 'already exists' ) ) {
 				throw $e;
@@ -82,29 +70,31 @@ class SheetsWriter {
 	}
 
 	private function ensureHeader(): void {
-		$response = $this->sheets->spreadsheets_values->get(
-			$this->spreadsheetId,
-			$this->range( 'A1:F1' )
-		);
-		$values = $response->getValues();
+		$token    = $this->auth->accessToken();
+		$existing = Http::json( 'GET', $this->valuesUrl( 'A1:F1' ), $token );
+		$values   = $existing['values'] ?? [];
 		if ( ! empty( $values ) && ! empty( $values[0] ) ) {
 			return;
 		}
 
-		$this->sheets->spreadsheets_values->update(
-			$this->spreadsheetId,
-			$this->range( 'A1:F1' ),
-			new ValueRange( [ 'values' => [ self::HEADER ] ] ),
-			[ 'valueInputOption' => 'RAW' ]
+		Http::json(
+			'PUT',
+			$this->valuesUrl( 'A1:F1', '', [ 'valueInputOption' => 'RAW' ] ),
+			$token,
+			[ 'values' => [ self::HEADER ] ]
 		);
 	}
 
 	/**
-	 * Build a quoted A1 range for the configured tab. Single-quoting is valid
-	 * for any sheet title and is required when the title contains spaces or
-	 * punctuation; embedded quotes are doubled per the A1 spec.
+	 * Build a Sheets values URL for a cell range in the configured tab.
+	 * Single-quoting the tab title is valid for any name and required when it
+	 * contains spaces or punctuation.
+	 *
+	 * @param array<string,string> $query
 	 */
-	private function range( string $a1 ): string {
-		return "'" . str_replace( "'", "''", $this->tabName ) . "'!" . $a1;
+	private function valuesUrl( string $a1, string $suffix = '', array $query = [] ): string {
+		$range = "'" . str_replace( "'", "''", $this->tabName ) . "'!" . $a1;
+		$url   = self::BASE . rawurlencode( $this->spreadsheetId ) . '/values/' . rawurlencode( $range ) . $suffix;
+		return $query ? $url . '?' . http_build_query( $query ) : $url;
 	}
 }

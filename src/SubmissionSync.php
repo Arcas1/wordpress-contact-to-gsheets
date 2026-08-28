@@ -2,8 +2,6 @@
 
 namespace C2GS;
 
-use Google\Service\Exception as GoogleServiceException;
-
 /**
  * Shared pipeline for every submission source: guard configuration, map the
  * fields to the fixed row, append to the sheet (with one 401 retry), and log
@@ -43,7 +41,7 @@ class SubmissionSync {
 			$this->log->add( [
 				'form_id'     => $formId,
 				'plugin_name' => $source,
-				'http_code'   => $e instanceof GoogleServiceException ? (int) $e->getCode() : 0,
+				'http_code'   => $e instanceof ApiException ? (int) $e->getCode() : 0,
 				'message'     => $e->getMessage(),
 			] );
 			$count = (int) get_transient( 'c2gs_fail_count' );
@@ -57,7 +55,7 @@ class SubmissionSync {
 	private function appendWithRetry( array $row ): void {
 		try {
 			( $this->writerFactory )()->append( $row );
-		} catch ( GoogleServiceException $e ) {
+		} catch ( ApiException $e ) {
 			if ( 401 !== (int) $e->getCode() ) {
 				throw $e;
 			}

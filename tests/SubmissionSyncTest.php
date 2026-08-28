@@ -8,7 +8,7 @@ use C2GS\FieldMapper;
 use C2GS\GoogleAuth;
 use C2GS\SheetsWriter;
 use C2GS\SubmissionSync;
-use Google\Service\Exception as GoogleServiceException;
+use C2GS\ApiException;
 use Mockery;
 
 final class SubmissionSyncTest extends TestCase {
@@ -87,7 +87,7 @@ final class SubmissionSyncTest extends TestCase {
 		Functions\when( 'delete_transient' )->justReturn( true );
 
 		$failing = Mockery::mock( SheetsWriter::class );
-		$failing->shouldReceive( 'append' )->once()->andThrow( new GoogleServiceException( 'unauthorized', 401 ) );
+		$failing->shouldReceive( 'append' )->once()->andThrow( new ApiException( 'unauthorized', 401 ) );
 		$ok = Mockery::mock( SheetsWriter::class );
 		$ok->shouldReceive( 'append' )->once();
 

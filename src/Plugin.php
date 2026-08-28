@@ -2,8 +2,6 @@
 
 namespace C2GS;
 
-use Google\Service\Sheets;
-
 final class Plugin {
 
 	private static ?Plugin $instance = null;
@@ -62,13 +60,12 @@ final class Plugin {
 			$spreadsheetId = (string) ( $settings['spreadsheet_id'] ?? '' );
 			$tabName       = (string) ( $settings['tab_name'] ?? 'Submissions' );
 			if ( '' === $spreadsheetId ) {
-				throw new \RuntimeException( 'No spreadsheet configured' );
+				throw new ApiException( 'No spreadsheet configured', 0 );
 			}
 			if ( '' === $tabName ) {
 				$tabName = 'Submissions';
 			}
-			$service = new Sheets( $auth->authedClient() );
-			return new SheetsWriter( $service, $spreadsheetId, $tabName );
+			return new SheetsWriter( $auth, $spreadsheetId, $tabName );
 		};
 	}
 }

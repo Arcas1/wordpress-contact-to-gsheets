@@ -67,10 +67,12 @@ class FormidableListener {
 	 * @return array<int|string,mixed>
 	 */
 	protected function postedMeta(): array {
-		if ( ! isset( $_POST['item_meta'] ) || ! is_array( $_POST['item_meta'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		// Reached only from Formidable's frm_after_create_entry hook, which fires
+		// after Formidable has validated the submission (including its nonce).
+		if ( ! isset( $_POST['item_meta'] ) || ! is_array( $_POST['item_meta'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Formidable verified the submission before firing this hook.
 			return [];
 		}
-		$raw = wp_unslash( $_POST['item_meta'] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$raw = wp_unslash( $_POST['item_meta'] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Formidable verified the submission before firing this hook.
 		return function_exists( 'map_deep' ) ? map_deep( $raw, 'sanitize_textarea_field' ) : (array) $raw;
 	}
 
