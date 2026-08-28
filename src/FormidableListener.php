@@ -40,8 +40,7 @@ class FormidableListener {
 			return;
 		}
 
-		$fields    = [];
-		$emailHint = null;
+		$fields = [];
 		foreach ( $this->fieldsForForm( (int) $formId ) as $field ) {
 			$id = $field['id'] ?? null;
 			if ( null === $id || ! array_key_exists( $id, $meta ) ) {
@@ -56,9 +55,6 @@ class FormidableListener {
 				$label = 'field_' . $id;
 			}
 			$fields[ $label ] = $meta[ $id ];
-			if ( null === $emailHint && 'email' === $type ) {
-				$emailHint = $label;
-			}
 		}
 		if ( [] === $fields ) {
 			return;
@@ -69,7 +65,7 @@ class FormidableListener {
 			$title = (string) \FrmForm::getName( (int) $formId );
 		}
 
-		$this->sync->sync( 'formidable', is_scalar( $formId ) ? $formId : '', $title, $fields, $emailHint );
+		$this->sync->sync( 'formidable', is_scalar( $formId ) ? $formId : '', $title, $fields );
 	}
 
 	/**

@@ -36,9 +36,17 @@ final class SubmissionListener {
 		}
 
 		$source = (string) ( $payload['plugin_name'] ?? ( $entryData['form_plugin'] ?? 'form-vibes' ) );
+
+		// Elementor Pro has its own listener with real field labels; skip the
+		// Form Vibes copy to avoid a duplicate row.
+		if ( 'elementor' === $source && class_exists( '\ElementorPro\Modules\Forms\Module' ) ) {
+			return;
+		}
+
 		$formId = $payload['form_id'] ?? ( $entryData['form_id'] ?? '' );
 		$title  = (string) ( $entryData['title'] ?? '' );
+		$url    = (string) ( $entryData['url'] ?? '' );
 
-		$this->sync->sync( $source, is_scalar( $formId ) ? $formId : '', $title, $fields );
+		$this->sync->sync( $source, is_scalar( $formId ) ? $formId : '', $title, $fields, $url );
 	}
 }

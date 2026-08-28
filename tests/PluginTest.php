@@ -22,6 +22,7 @@ final class PluginTest extends TestCase {
 		Plugin::instance()->boot();
 
 		$this->assertContains( 'fv_after_entry_meta_success', $hooks );
+		$this->assertContains( 'elementor_pro/forms/new_record', $hooks );
 		$this->assertContains( 'metform_after_store_form_data', $hooks );
 		$this->assertContains( 'fluentform/submission_inserted', $hooks );
 		$this->assertContains( 'forminator_custom_form_submit_before_set_fields', $hooks );

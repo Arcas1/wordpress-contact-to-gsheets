@@ -3,13 +3,11 @@
 WordPress plugin that sends every form submission to a Google Sheet in real
 time, one row per submission.
 
-```
-timestamp | form | name | email | message | data
-```
-
-`name`, `email`, and `message` are auto-detected from the submitted fields.
-`data` holds the full submission as JSON. The target tab and its header row are
-created automatically on the first submission.
+Column A is the form (its name, or the page URL it was submitted from). Every
+other column is one of the form's own fields, added to the header row the first
+time it appears. Different forms share one tab; manual renames / reordering in
+the sheet are respected. The tab and header row are created automatically on
+the first submission.
 
 ## Supported forms
 
@@ -43,10 +41,12 @@ Full walkthrough: [`docs/GOOGLE_SETUP.md`](docs/GOOGLE_SETUP.md).
 
 Each form source has a small adapter that hooks that plugin's submission action
 and normalizes the fields. Every adapter feeds one shared pipeline
-(`SubmissionSync`): map to the fixed row, append to the sheet via direct HTTPS
-calls to the Google Sheets REST API (`wp_remote_*`, no bundled SDK), retry once
-on a 401, and log failures to a capped option surfaced as an admin notice. A
-failure never blocks the visitor's submission.
+(`SubmissionSync`): normalize the fields, resolve the form label, then
+`SheetsWriter` aligns the values to a dynamic column set (extending the header
+row when a new field shows up) and appends via direct HTTPS calls to the Google
+Sheets REST API (`wp_remote_*`, no bundled SDK). One retry on a 401; failures
+go to a capped option surfaced as an admin notice. A failure never blocks the
+visitor's submission.
 
 Delivery is real-time only: no cron, no retry queue. A submission that cannot
 reach Google is logged, not re-sent; the full data stays in the source form

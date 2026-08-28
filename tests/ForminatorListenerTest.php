@@ -22,7 +22,6 @@ final class ForminatorListenerTest extends TestCase {
 				'email-1'    => 'ada@example.com',
 				'textarea-1' => 'Please call me.',
 			],
-			'email-1'
 		);
 
 		( new ForminatorListener( $sync ) )->handle(

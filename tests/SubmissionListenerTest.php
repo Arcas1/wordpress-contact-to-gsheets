@@ -8,19 +8,20 @@ use Mockery;
 
 final class SubmissionListenerTest extends TestCase {
 
-	public function test_extracts_form_vibes_1_5_3_entires_key_and_calls_sync(): void {
+	public function test_extracts_entires_fields_and_the_source_url(): void {
 		$sync = Mockery::mock( SubmissionSync::class );
 		$sync->shouldReceive( 'sync' )->once()->with(
 			'cf7',
 			42,
 			'',
-			[ 'your-name' => 'Ada', 'your-email' => 'a@b.com' ]
+			[ 'your-name' => 'Ada', 'your-email' => 'a@b.com' ],
+			'https://site/contact'
 		);
 
 		( new SubmissionListener( $sync ) )->handle( [
 			'plugin_name' => 'cf7',
 			'form_id'     => 42,
-			'entry_data'  => [ 'form_plugin' => 'cf7', 'form_id' => 42 ],
+			'entry_data'  => [ 'form_plugin' => 'cf7', 'url' => 'https://site/contact' ],
 			'entires'     => [ 'your-name' => 'Ada', 'your-email' => 'a@b.com' ],
 		] );
 	}
@@ -31,13 +32,26 @@ final class SubmissionListenerTest extends TestCase {
 			'wpforms',
 			3,
 			'Support',
-			[ 'email' => 'a@b.com' ]
+			[ 'email' => 'a@b.com' ],
+			''
 		);
 
 		( new SubmissionListener( $sync ) )->handle( [
 			'plugin_name' => 'wpforms',
 			'form_id'     => 3,
 			'entry_data'  => [ 'title' => 'Support', 'posted_data' => [ 'email' => 'a@b.com' ] ],
+		] );
+	}
+
+	public function test_skips_elementor_when_elementor_pro_is_active(): void {
+		// tests/bootstrap.php defines a stub ElementorPro\Modules\Forms\Module.
+		$sync = Mockery::mock( SubmissionSync::class );
+		$sync->shouldReceive( 'sync' )->never();
+
+		( new SubmissionListener( $sync ) )->handle( [
+			'plugin_name' => 'elementor',
+			'form_id'     => 1,
+			'entires'     => [ 'email' => 'a@b.com' ],
 		] );
 	}
 

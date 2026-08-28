@@ -109,9 +109,9 @@ For a set-and-forget integration:
    ```
 
 4. You do **not** need to create the tab or header row. The plugin creates
-   the tab (default name `Submissions`) and writes the header
-   `timestamp | form | name | email | message | data` on the first
-   submission.
+   the tab (default name `Submissions`) on the first submission and builds the
+   header row from the form's fields: column A is the form, then one column per
+   field.
 
 ## Step 6: Connect in WordPress
 

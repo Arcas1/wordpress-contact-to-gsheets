@@ -50,11 +50,13 @@ final class Plugin {
 			$this->buildWriterFactory( $auth )
 		);
 
-		// Form Vibes covers CF7, WPForms, Elementor, Gravity, Ninja, WS Form,
-		// Caldera, Bricks, Beaver Builder, Everest Forms through one hook.
+		// Form Vibes covers CF7, WPForms, Gravity, Ninja, WS Form, Caldera,
+		// Bricks, Beaver Builder, Everest Forms through one hook.
 		add_action( 'fv_after_entry_meta_success', [ new SubmissionListener( $sync ), 'handle' ] );
 
-		// Direct adapters for popular forms Form Vibes 1.5.3 does not integrate.
+		// Direct adapters for forms Form Vibes 1.5.3 does not integrate, or
+		// integrates without field labels (Elementor).
+		add_action( 'elementor_pro/forms/new_record', [ new ElementorListener( $sync ), 'handle' ], 20, 2 );
 		add_action( 'metform_after_store_form_data', [ new MetFormListener( $sync ), 'handle' ], 10, 4 );
 		add_action( 'fluentform/submission_inserted', [ new FluentFormListener( $sync ), 'handle' ], 20, 3 );
 		add_action( 'forminator_custom_form_submit_before_set_fields', [ new ForminatorListener( $sync ), 'handle' ], 20, 3 );

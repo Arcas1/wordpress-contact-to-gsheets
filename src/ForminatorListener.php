@@ -47,8 +47,7 @@ final class ForminatorListener {
 			return;
 		}
 
-		$fields    = [];
-		$emailHint = null;
+		$fields = [];
 		foreach ( $fieldData as $item ) {
 			if ( ! is_array( $item ) || ! isset( $item['name'] ) ) {
 				continue;
@@ -58,9 +57,6 @@ final class ForminatorListener {
 				continue;
 			}
 			$fields[ $slug ] = $item['value'] ?? '';
-			if ( null === $emailHint && str_starts_with( $slug, 'email-' ) ) {
-				$emailHint = $slug;
-			}
 		}
 		if ( [] === $fields ) {
 			return;
@@ -71,7 +67,7 @@ final class ForminatorListener {
 			$title = (string) forminator_get_form_name( $formId );
 		}
 
-		$this->sync->sync( 'forminator', is_scalar( $formId ) ? $formId : '', $title, $fields, $emailHint );
+		$this->sync->sync( 'forminator', is_scalar( $formId ) ? $formId : '', $title, $fields );
 	}
 
 	private function isNoise( string $slug ): bool {

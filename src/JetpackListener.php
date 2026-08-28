@@ -31,15 +31,11 @@ final class JetpackListener {
 			return;
 		}
 
-		$map       = [];
-		$emailHint = null;
+		$map = [];
 		foreach ( $fields as $key => $field ) {
-			[ $label, $type, $value ] = $this->readField( $key, $field );
+			[ $label, $value ] = $this->readField( $key, $field );
 			if ( '' === $label ) {
 				continue;
-			}
-			if ( 'email' === $type && null === $emailHint ) {
-				$emailHint = $label;
 			}
 			$map[ $label ] = $value;
 		}
@@ -47,32 +43,26 @@ final class JetpackListener {
 			return;
 		}
 
-		$title = ( is_array( $entryValues ) && ! empty( $entryValues['entry_title'] ) )
-			? (string) $entryValues['entry_title']
-			: '';
+		$entryValues = is_array( $entryValues ) ? $entryValues : [];
+		$title       = ! empty( $entryValues['entry_title'] ) ? (string) $entryValues['entry_title'] : '';
+		$url         = ! empty( $entryValues['entry_permalink'] ) ? (string) $entryValues['entry_permalink'] : '';
 
-		$this->sync->sync( 'jetpack', is_scalar( $postId ) ? $postId : '', $title, $map, $emailHint );
+		$this->sync->sync( 'jetpack', is_scalar( $postId ) ? $postId : '', $title, $map, $url );
 	}
 
 	/**
 	 * @param int|string $key
 	 * @param mixed      $field
-	 * @return array{0:string,1:string,2:mixed}
+	 * @return array{0:string,1:mixed}
 	 */
 	private function readField( $key, $field ): array {
 		$fallbackLabel = is_string( $key ) ? $key : ( 'field_' . $key );
 
 		if ( is_object( $field ) ) {
-			$label = '';
-			$type  = '';
-			if ( method_exists( $field, 'get_attribute' ) ) {
-				$label = (string) $field->get_attribute( 'label' );
-				$type  = (string) $field->get_attribute( 'type' );
-			}
+			$label = method_exists( $field, 'get_attribute' ) ? (string) $field->get_attribute( 'label' ) : '';
 			$value = property_exists( $field, 'value' ) ? $field->value : '';
 			return [
 				'' !== $label ? $label : $fallbackLabel,
-				$type,
 				( is_scalar( $value ) || is_array( $value ) ) ? $value : '',
 			];
 		}
@@ -80,11 +70,10 @@ final class JetpackListener {
 		if ( is_array( $field ) ) {
 			return [
 				(string) ( $field['label'] ?? $fallbackLabel ),
-				(string) ( $field['type'] ?? '' ),
 				$field['value'] ?? '',
 			];
 		}
 
-		return [ $fallbackLabel, '', is_scalar( $field ) ? (string) $field : '' ];
+		return [ $fallbackLabel, is_scalar( $field ) ? (string) $field : '' ];
 	}
 }

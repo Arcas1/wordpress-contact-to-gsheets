@@ -41,7 +41,7 @@ final class JetpackListenerTest extends TestCase {
 				'Email'   => 'ada@example.com',
 				'Message' => 'Hello there team.',
 			],
-			'Email'
+			''
 		);
 
 		( new JetpackListener( $sync ) )->handle(
@@ -75,7 +75,7 @@ final class JetpackListenerTest extends TestCase {
 			2,
 			'',
 			[ 'Your email' => 'a@b.com' ],
-			'Your email'
+			''
 		);
 
 		( new JetpackListener( $sync ) )->handle(

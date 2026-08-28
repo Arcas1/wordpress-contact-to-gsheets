@@ -49,7 +49,6 @@ final class FormidableListenerTest extends TestCase {
 				'Correo'      => 'ada@example.com',
 				'Tu consulta' => 'Long message here.',
 			],
-			'Correo'
 		);
 
 		$listener = $this->listener(

@@ -4,7 +4,7 @@ Tags: google sheets, contact form, form vibes, elementor forms, spreadsheet
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 0.5.0
+Stable tag: 0.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -13,14 +13,13 @@ Send every WordPress form submission to a Google Sheet in real time. Works with 
 == Description ==
 
 Contact to GSheets copies every form submission on your site into a Google
-Sheet the moment it is sent. One row per submission:
+Sheet the moment it is sent. One row per submission.
 
-`timestamp | form | name | email | message | data`
-
-The name, email and message columns are detected automatically from the
-submitted fields. The `data` column keeps the full submission as JSON, so you
-never lose a field. The target tab and its header row are created for you on
-the first submission.
+The first column is the **form** (its name, or the page URL it was sent from).
+Every other column is one of the **form's own fields**, added to the header
+automatically the first time it is seen. Different forms on the same site share
+one tab; a form with new fields just adds new columns. The tab and header row
+are created for you on the first submission.
 
 No Zapier, no monthly fee, no external service in the middle: the plugin talks
 straight to the Google Sheets API from your server using a Google account you
@@ -59,14 +58,14 @@ connecting your account (about 10 minutes, one time).
 = Español =
 
 Contact to GSheets copia cada envio de formulario de tu sitio a una hoja de
-Google Sheets en el momento en que se envia. Una fila por envio:
+Google Sheets en el momento en que se envia. Una fila por envio.
 
-`timestamp | form | name | email | message | data`
-
-Las columnas de nombre, correo y mensaje se detectan solas a partir de los
-campos enviados. La columna `data` guarda el envio completo como JSON, asi no
-pierdes ningun dato. La pestana de destino y su fila de encabezado se crean
-automaticamente en el primer envio.
+La primera columna es el **formulario** (su nombre, o la URL de la pagina desde
+la que se envio). Cada otra columna es uno de los **campos del formulario**, y
+se agrega al encabezado automaticamente la primera vez que aparece. Varios
+formularios del mismo sitio comparten una pestana; un formulario con campos
+nuevos simplemente agrega columnas nuevas. La pestana y la fila de encabezado
+se crean solas en el primer envio.
 
 Sin Zapier, sin cuota mensual y sin servicios externos de por medio: el plugin
 habla directamente con la API de Google Sheets desde tu servidor, usando una
@@ -138,11 +137,19 @@ The submission still completes for the visitor. The sync failure is logged and
 shown as an admin notice, and the full data remains in your form plugin. There
 is no automatic retry; delivery is real time only.
 
-= How are the name, email and message columns filled? =
+= What columns does the sheet have? =
 
-Automatically, by looking at the field names and types. The full submission is
-always written to the `data` column as JSON, so nothing is lost even when a
-guess is wrong. There is no per-form mapping screen.
+Column A is the form (name or page URL). After that, one column per field,
+labelled with the field's own name. New fields add new columns automatically;
+existing columns are never removed. If you rename or reorder columns in the
+sheet, the plugin follows your layout on the next submission (within ten
+minutes). Empty fields and captcha / plumbing fields are skipped.
+
+= Elementor field columns show as "field_be8ff7f" instead of a label. =
+
+That happens when the Elementor field has no custom ID and Elementor Pro is not
+active. With Elementor Pro active this plugin reads the real labels. Otherwise,
+set a custom ID on each field in Elementor (field -> Advanced -> ID).
 
 = Does it work on multisite? =
 
@@ -156,6 +163,14 @@ It runs per site. Network activation is not specifically supported.
 4. The "Recent sync failures" list on the settings page.
 
 == Changelog ==
+
+= 0.6.0 =
+* Dynamic columns: the sheet now has one column per form field (labelled with
+  the field name), instead of a fixed name / email / message / data layout.
+  Column A is the form name or the page URL. New fields add new columns; manual
+  renames and reordering in the sheet are respected.
+* Added a direct Elementor Pro listener so Elementor form columns use the real
+  field labels instead of generated field IDs.
 
 = 0.5.0 =
 * Replaced the bundled Google API PHP client with direct HTTPS calls to the
@@ -180,6 +195,11 @@ It runs per site. Network activation is not specifically supported.
   guided OAuth setup, auto-created tab and header, and a failure log.
 
 == Upgrade Notice ==
+
+= 0.6.0 =
+The sheet layout changed to one column per field. New submissions build a fresh
+header row; existing rows from earlier versions stay as they are. Consider a
+new tab or a fresh sheet if you want a clean start.
 
 = 0.5.0 =
 The Google API client is gone; the plugin is now dependency-free. Re-check the

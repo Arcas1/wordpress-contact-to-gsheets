@@ -1,6 +1,6 @@
 <?php
 /**
- * Shared pipeline: guard config, map fields, append to the sheet, log failures.
+ * Shared pipeline: pick the form label, normalise fields, append, log failures.
  *
  * @package   C2GS
  * @author    Arcas1
@@ -12,9 +12,10 @@
 namespace C2GS;
 
 /**
- * Shared pipeline for every submission source: guard configuration, map the
- * fields to the fixed row, append to the sheet (with one 401 retry), and log
- * failures. Never throws.
+ * Every submission source funnels through here: resolve the value for the
+ * "form" column (name, else page URL, else referer, else source #id),
+ * normalise the fields, append the row (one 401 retry), and log any failure.
+ * Never throws.
  */
 class SubmissionSync {
 
@@ -26,12 +27,13 @@ class SubmissionSync {
 	) {}
 
 	/**
-	 * @param string              $source A short label for the "form" column prefix (e.g. "cf7", "metform").
-	 * @param string|int           $formId
-	 * @param string              $title  Form title; empty falls back to "<source> #<id>".
-	 * @param array<string,mixed> $fields field name => value (string or array).
+	 * @param string              $source Short label, e.g. "elementor", "metform".
+	 * @param string|int          $formId
+	 * @param string              $title  Form name if the source knows it.
+	 * @param array<string,mixed>  $fields key/label => value.
+	 * @param string              $url    Page URL the form was submitted from, if known.
 	 */
-	public function sync( string $source, string|int $formId, string $title, array $fields, ?string $emailKeyHint = null ): void {
+	public function sync( string $source, string|int $formId, string $title, array $fields, string $url = '' ): void {
 		try {
 			$settings      = get_option( 'c2gs_settings', [] );
 			$spreadsheetId = is_array( $settings ) ? (string) ( $settings['spreadsheet_id'] ?? '' ) : '';
@@ -39,12 +41,13 @@ class SubmissionSync {
 				set_transient( 'c2gs_not_connected', 1, DAY_IN_SECONDS );
 				return;
 			}
-			if ( [] === $fields ) {
+
+			$map = $this->mapper->normalize( $fields );
+			if ( [] === $map ) {
 				return;
 			}
 
-			$row = $this->mapper->toRow( $source, $formId, $title, $fields, wp_date( 'c' ), $emailKeyHint );
-			$this->appendWithRetry( $row );
+			$this->appendWithRetry( $this->formLabel( $source, $formId, $title, $url ), $map );
 			delete_transient( 'c2gs_not_connected' );
 		} catch ( \Throwable $e ) {
 			$this->log->add( [
@@ -58,18 +61,32 @@ class SubmissionSync {
 		}
 	}
 
+	private function formLabel( string $source, string|int $formId, string $title, string $url ): string {
+		if ( '' !== trim( $title ) ) {
+			return trim( $title );
+		}
+		if ( '' !== trim( $url ) ) {
+			return trim( $url );
+		}
+		$referer = function_exists( 'wp_get_referer' ) ? wp_get_referer() : '';
+		if ( is_string( $referer ) && '' !== $referer ) {
+			return $referer;
+		}
+		return $source . ' #' . $formId;
+	}
+
 	/**
-	 * @param array{0:string,1:string,2:string,3:string,4:string,5:string} $row
+	 * @param array<string,string> $map
 	 */
-	private function appendWithRetry( array $row ): void {
+	private function appendWithRetry( string $form, array $map ): void {
 		try {
-			( $this->writerFactory )()->append( $row );
+			( $this->writerFactory )()->append( $form, $map );
 		} catch ( ApiException $e ) {
 			if ( 401 !== (int) $e->getCode() ) {
 				throw $e;
 			}
 			$this->auth->forceRefresh();
-			( $this->writerFactory )()->append( $row );
+			( $this->writerFactory )()->append( $form, $map );
 		}
 	}
 }
