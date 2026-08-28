@@ -1,4 +1,13 @@
 <?php
+/**
+ * Bootstrap: wires the settings page and every form-source hook.
+ *
+ * @package   C2GS
+ * @author    Arcas1
+ * @copyright 2026 Arcas1
+ * @license   GPL-2.0-or-later
+ * @link      https://github.com/Arcas1/wordpress-contact-to-gsheets
+ */
 
 namespace C2GS;
 

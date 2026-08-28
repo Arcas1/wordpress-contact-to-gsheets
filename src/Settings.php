@@ -1,4 +1,13 @@
 <?php
+/**
+ * Settings page, Setup guide tab, and the OAuth connect/disconnect handlers.
+ *
+ * @package   C2GS
+ * @author    Arcas1
+ * @copyright 2026 Arcas1
+ * @license   GPL-2.0-or-later
+ * @link      https://github.com/Arcas1/wordpress-contact-to-gsheets
+ */
 
 namespace C2GS;
 

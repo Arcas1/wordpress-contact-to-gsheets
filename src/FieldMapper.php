@@ -1,4 +1,13 @@
 <?php
+/**
+ * Turns a submitted-fields map into the fixed six-column sheet row.
+ *
+ * @package   C2GS
+ * @author    Arcas1
+ * @copyright 2026 Arcas1
+ * @license   GPL-2.0-or-later
+ * @link      https://github.com/Arcas1/wordpress-contact-to-gsheets
+ */
 
 namespace C2GS;
 

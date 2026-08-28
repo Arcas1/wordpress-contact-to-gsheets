@@ -1,4 +1,13 @@
 <?php
+/**
+ * Uninstall cleanup: remove every option and transient the plugin creates.
+ *
+ * @package   C2GS
+ * @author    Arcas1
+ * @copyright 2026 Arcas1
+ * @license   GPL-2.0-or-later
+ * @link      https://github.com/Arcas1/wordpress-contact-to-gsheets
+ */
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
