@@ -181,7 +181,7 @@ final class SetupGuide {
 			's4_2'       => 'Application type: Web application.',
 			's4_3'       => 'Under Authorized redirect URIs, click Add URI and paste this exact address:',
 			's4_3_note'  => 'It must match character for character (https, no trailing slash). If your site answers on both www and non-www, add both.',
-			's4_4'       => 'Click Create. Google shows "Your Client ID" and "Your Client Secret". Keep that dialog open for the next step (the secret is also viewable later on the Credentials page).',
+			's4_4'       => 'Click Create. Google shows "Your Client ID" and "Your Client Secret". Either copy both for step 6, or click "Download JSON" and upload that file in step 6 to fill both fields automatically.',
 
 			's5_title'   => 'Step 5. Get the Spreadsheet ID',
 			's5_1'       => 'Open (or create) the Google Sheet that will receive submissions. The account you connect with must be able to edit it.',
@@ -191,7 +191,7 @@ final class SetupGuide {
 
 			's6_title'   => 'Step 6. Enter the values and connect',
 			's6_1'       => 'Go to the <a href="%s">Settings tab</a>.',
-			's6_2'       => 'Paste Google Client ID, Google Client Secret, and Spreadsheet ID. Leave Tab name as "Submissions" unless you want another. Click Save Changes.',
+			's6_2'       => 'Either upload the JSON file from step 4 in "Upload client JSON", or paste Google Client ID and Google Client Secret by hand. Add the Spreadsheet ID. Leave Tab name as "Submissions" unless you want another. Click Save Changes.',
 			's6_3'       => 'Click Connect Google and pick the account that can edit the sheet.',
 			's6_4'       => 'If you see "Google hasn\'t verified this app", click Advanced, then "Go to (app name) (unsafe)". This is your own app.',
 			's6_5'       => 'Approve the Google Sheets permission. You return to the Settings tab showing "Connected".',
@@ -245,7 +245,7 @@ final class SetupGuide {
 			's4_2'       => 'Tipo de aplicacion: Aplicacion web.',
 			's4_3'       => 'En URIs de redireccionamiento autorizados, haz clic en Agregar URI y pega esta direccion exacta:',
 			's4_3_note'  => 'Debe coincidir caracter por caracter (https, sin barra final). Si tu sitio responde en www y sin www, agrega ambas.',
-			's4_4'       => 'Haz clic en Crear. Google muestra "Tu ID de cliente" y "Tu secreto de cliente". Deja ese cuadro abierto para el siguiente paso (el secreto tambien se puede ver despues en la pagina de Credenciales).',
+			's4_4'       => 'Haz clic en Crear. Google muestra "Tu ID de cliente" y "Tu secreto de cliente". Copia ambos para el paso 6, o haz clic en "Descargar JSON" y sube ese archivo en el paso 6 para completar los dos campos automaticamente.',
 
 			's5_title'   => 'Paso 5. Obtener el ID de la hoja de calculo',
 			's5_1'       => 'Abre (o crea) la hoja de Google Sheets que recibira los envios. La cuenta con la que te conectes debe poder editarla.',
@@ -255,7 +255,7 @@ final class SetupGuide {
 
 			's6_title'   => 'Paso 6. Ingresar los valores y conectar',
 			's6_1'       => 'Ve a la <a href="%s">pestana Ajustes</a>.',
-			's6_2'       => 'Pega Google Client ID, Google Client Secret y Spreadsheet ID. Deja Tab name como "Submissions" salvo que quieras otro. Haz clic en Guardar cambios.',
+			's6_2'       => 'Sube el archivo JSON del paso 4 en "Upload client JSON", o pega Google Client ID y Google Client Secret a mano. Agrega el Spreadsheet ID. Deja Tab name como "Submissions" salvo que quieras otro. Haz clic en Guardar cambios.',
 			's6_3'       => 'Haz clic en Connect Google y elige la cuenta que puede editar la hoja.',
 			's6_4'       => 'Si ves "Google no ha verificado esta aplicacion", haz clic en Avanzada y luego en "Ir a (nombre de la app) (no seguro)". Es tu propia aplicacion.',
 			's6_5'       => 'Aprueba el permiso de Google Sheets. Vuelves a la pestana Ajustes con el estado "Connected".',

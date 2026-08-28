@@ -4,7 +4,7 @@ Tags: google sheets, forms, contact form, form vibes, elementor forms
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 0.3.0
+Stable tag: 0.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -46,8 +46,10 @@ Short version:
 3. Create credentials -> OAuth client ID -> Web application. Add this redirect
    URI (also shown on the settings page):
    https://YOUR-SITE/wp-admin/admin-post.php?action=c2gs_oauth_cb
-4. In WordPress: Settings -> Contact to GSheets. Paste the Client ID, Client
-   Secret, and Spreadsheet ID (from the sheet URL). Save.
+   Then click "Download JSON".
+4. In WordPress: Settings -> Contact to GSheets. Upload that JSON in "Upload
+   client JSON" (or paste the Client ID and Client Secret by hand). Add the
+   Spreadsheet ID (from the sheet URL). Save.
 5. Click "Connect Google" and grant access.
 6. Submit a test form and confirm the row appears.
 

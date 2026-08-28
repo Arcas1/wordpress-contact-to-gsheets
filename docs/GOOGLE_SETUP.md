@@ -91,8 +91,8 @@ For a set-and-forget integration:
    It must match character for character, including `https` and no trailing
    slash. If your site is reachable at both `www` and non-`www`, add both.
 6. **Create.** A dialog shows **Your Client ID** and **Your Client Secret**.
-   Copy both now (you can also download the JSON, but you only need these two
-   strings). The secret can be viewed again later on the credentials page.
+   Either copy both for Step 6, or click **Download JSON** and use that file in
+   Step 6. The secret can also be viewed again later on the credentials page.
 
 ## Step 5: Get the Spreadsheet ID
 
@@ -116,8 +116,10 @@ For a set-and-forget integration:
 ## Step 6: Connect in WordPress
 
 1. WordPress admin: **Settings -> Contact to GSheets**.
-2. Paste **Google Client ID**, **Google Client Secret**, **Spreadsheet ID**.
-   Set **Tab name** (or leave `Submissions`). **Save Changes**.
+2. In **Upload client JSON**, choose the file you downloaded in Step 4 - it
+   fills **Google Client ID** and **Google Client Secret** on save. (Or paste
+   those two by hand.) Add the **Spreadsheet ID**. Set **Tab name** (or leave
+   `Submissions`). **Save Changes**. The JSON is read on save, not stored.
 3. Confirm the **redirect URI** shown on the page matches what you entered in
    Step 4. If not, fix it in Google Cloud.
 4. Click **Connect Google**.

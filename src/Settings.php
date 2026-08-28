@@ -65,6 +65,21 @@ final class Settings {
 			$tabName = 'Submissions';
 		}
 
+		// An uploaded Google OAuth client JSON fills client id/secret.
+		$upload = $this->readClientJsonUpload();
+		if ( isset( $upload['error'] ) ) {
+			add_settings_error( self::SETTINGS_OPTION, 'client_json', $upload['error'] );
+		} elseif ( ! empty( $upload['client_id'] ) && ! empty( $upload['client_secret'] ) ) {
+			$clientId     = $upload['client_id'];
+			$clientSecret = $upload['client_secret'];
+			add_settings_error(
+				self::SETTINGS_OPTION,
+				'client_json_ok',
+				__( 'Client ID and Client Secret were read from the uploaded JSON.', 'contact-to-gsheets' ),
+				'updated'
+			);
+		}
+
 		$spreadsheetId = sanitize_text_field( $input['spreadsheet_id'] ?? '' );
 		if ( '' !== $spreadsheetId && ! preg_match( '/^[A-Za-z0-9_-]+$/', $spreadsheetId ) ) {
 			add_settings_error(
@@ -80,6 +95,60 @@ final class Settings {
 			'client_secret'  => $clientSecret,
 			'spreadsheet_id' => $spreadsheetId,
 			'tab_name'       => $tabName,
+		];
+	}
+
+	/**
+	 * Extract client_id / client_secret from an uploaded Google OAuth client
+	 * JSON file. Returns [] when no file was uploaded, ['error' => msg] on a
+	 * bad file, or ['client_id' => ..., 'client_secret' => ...] on success.
+	 *
+	 * @return array{client_id?:string,client_secret?:string,error?:string}
+	 */
+	protected function readClientJsonUpload(): array {
+		if ( empty( $_FILES['c2gs_client_json']['tmp_name'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			return [];
+		}
+		$file = $_FILES['c2gs_client_json']; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+
+		if ( (int) ( $file['error'] ?? UPLOAD_ERR_NO_FILE ) !== UPLOAD_ERR_OK ) {
+			return [ 'error' => __( 'The credentials file upload failed. Try again.', 'contact-to-gsheets' ) ];
+		}
+		if ( (int) ( $file['size'] ?? 0 ) > 65536 ) {
+			return [ 'error' => __( 'That file is too large to be an OAuth client JSON.', 'contact-to-gsheets' ) ];
+		}
+		$tmp = (string) $file['tmp_name'];
+		if ( ! is_uploaded_file( $tmp ) ) {
+			return [ 'error' => __( 'Could not read the uploaded credentials file.', 'contact-to-gsheets' ) ];
+		}
+
+		return $this->parseClientJson( (string) file_get_contents( $tmp ) );
+	}
+
+	/**
+	 * Parse a Google OAuth client JSON string.
+	 *
+	 * @return array{client_id?:string,client_secret?:string,error?:string}
+	 */
+	public function parseClientJson( string $json ): array {
+		$data = json_decode( $json, true );
+		if ( ! is_array( $data ) ) {
+			return [ 'error' => __( 'The uploaded file is not valid JSON.', 'contact-to-gsheets' ) ];
+		}
+		if ( 'service_account' === ( $data['type'] ?? '' ) ) {
+			return [
+				'error' => __( 'That is a service account key. This plugin needs an OAuth 2.0 Client ID of type "Web application" (Credentials -> Create credentials -> OAuth client ID).', 'contact-to-gsheets' ),
+			];
+		}
+		$node = $data['web'] ?? $data['installed'] ?? null;
+		if ( ! is_array( $node ) || empty( $node['client_id'] ) || empty( $node['client_secret'] ) ) {
+			return [
+				'error' => __( 'Could not find client_id and client_secret in the file. Download the JSON from your OAuth 2.0 Client ID on the Google Cloud Credentials page.', 'contact-to-gsheets' ),
+			];
+		}
+		return [
+			'client_id'     => sanitize_text_field( (string) $node['client_id'] ),
+			'client_secret' => sanitize_text_field( (string) $node['client_secret'] ),
 		];
 	}
 
@@ -240,9 +309,16 @@ final class Settings {
 				<?php endif; ?>
 			</p>
 
-			<form method="post" action="options.php">
+			<form method="post" action="options.php" enctype="multipart/form-data">
 				<?php settings_fields( 'c2gs_group' ); ?>
 				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="c2gs_client_json"><?php esc_html_e( 'Upload client JSON', 'contact-to-gsheets' ); ?></label></th>
+						<td>
+							<input name="c2gs_client_json" id="c2gs_client_json" type="file" accept="application/json,.json" />
+							<p class="description"><?php esc_html_e( 'Optional. Download the JSON from your OAuth 2.0 Client ID on the Google Cloud Credentials page and upload it here to fill the two fields below. The file is read on save and not stored.', 'contact-to-gsheets' ); ?></p>
+						</td>
+					</tr>
 					<tr>
 						<th scope="row"><label for="c2gs_client_id"><?php esc_html_e( 'Google Client ID', 'contact-to-gsheets' ); ?></label></th>
 						<td><input name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[client_id]" id="c2gs_client_id" type="text" class="regular-text" value="<?php echo esc_attr( $settings['client_id'] ?? '' ); ?>" /></td>

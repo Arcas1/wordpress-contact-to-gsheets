@@ -3,7 +3,7 @@
  * Plugin Name:       Contact to GSheets
  * Plugin URI:        https://github.com/Arcas1/wordpress-contact-to-gsheets
  * Description:        Sends WordPress form submissions to a Google Sheet in real time, one row per submission. Works with Form Vibes (CF7, WPForms, Elementor, Gravity, Ninja, WS Form, and more) plus MetForm, Fluent Forms, Forminator, Formidable Forms, and the Jetpack contact form.
- * Version:           0.3.0
+ * Version:           0.4.0
  * Requires at least: 6.0
  * Tested up to:      6.8
  * Requires PHP:      8.1
@@ -29,7 +29,7 @@ defined( 'ABSPATH' ) || exit;
 
 define( 'C2GS_FILE', __FILE__ );
 define( 'C2GS_DIR', plugin_dir_path( __FILE__ ) );
-define( 'C2GS_VERSION', '0.3.0' );
+define( 'C2GS_VERSION', '0.4.0' );
 
 $c2gs_autoload = __DIR__ . '/vendor/autoload.php';
 if ( ! is_readable( $c2gs_autoload ) ) {

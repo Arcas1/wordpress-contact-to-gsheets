@@ -57,4 +57,39 @@ final class SettingsTest extends TestCase {
 			$this->settings()->redirectUri()
 		);
 	}
+
+	public function test_parse_client_json_reads_web_client(): void {
+		$json = json_encode( [
+			'web' => [
+				'client_id'     => '123-abc.apps.googleusercontent.com',
+				'client_secret' => 'GOCSPX-secret',
+				'redirect_uris' => [ 'https://site/wp-admin/admin-post.php?action=c2gs_oauth_cb' ],
+			],
+		] );
+
+		$out = $this->settings()->parseClientJson( $json );
+
+		$this->assertSame( '123-abc.apps.googleusercontent.com', $out['client_id'] );
+		$this->assertSame( 'GOCSPX-secret', $out['client_secret'] );
+		$this->assertArrayNotHasKey( 'error', $out );
+	}
+
+	public function test_parse_client_json_reads_installed_client(): void {
+		$json = json_encode( [ 'installed' => [ 'client_id' => 'id', 'client_secret' => 'sec' ] ] );
+		$out  = $this->settings()->parseClientJson( $json );
+		$this->assertSame( 'id', $out['client_id'] );
+		$this->assertSame( 'sec', $out['client_secret'] );
+	}
+
+	public function test_parse_client_json_rejects_service_account_key(): void {
+		$json = json_encode( [ 'type' => 'service_account', 'private_key' => '-----BEGIN', 'client_email' => 'x@y.iam' ] );
+		$out  = $this->settings()->parseClientJson( $json );
+		$this->assertArrayHasKey( 'error', $out );
+		$this->assertStringContainsString( 'service account', $out['error'] );
+	}
+
+	public function test_parse_client_json_rejects_garbage(): void {
+		$this->assertArrayHasKey( 'error', $this->settings()->parseClientJson( 'not json' ) );
+		$this->assertArrayHasKey( 'error', $this->settings()->parseClientJson( json_encode( [ 'web' => [ 'client_id' => 'x' ] ] ) ) );
+	}
 }
