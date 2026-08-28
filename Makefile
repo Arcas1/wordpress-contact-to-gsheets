@@ -17,7 +17,7 @@ STAGE       := $(BUILD_DIR)/$(PLUGIN_SLUG)
 ZIP         := $(BUILD_DIR)/$(PLUGIN_SLUG)-v$(VERSION).zip
 
 # Files and directories copied verbatim into the package.
-RUNTIME := $(PLUGIN_SLUG).php uninstall.php readme.txt src
+RUNTIME := $(PLUGIN_SLUG).php uninstall.php readme.txt src languages
 
 .PHONY: all zip build test clean
 
